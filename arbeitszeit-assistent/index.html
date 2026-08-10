@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edeka Zeit-Assistent</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url('https://edekajens.de/wp-content/uploads/2020/11/WCI_EDEKA_Tafel_quer_ohne_Kante_CMYK_juli_2020_a4-2.jpg');
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed;
+            color: #111; 
+            margin: 0; 
+            padding: 0 0 40px 0; 
+            display: flex;
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            box-sizing: border-box;
+        }
+
+        .custom-header {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 3px solid #FFD600;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            margin-bottom: 40px; 
+            padding: 15px 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; 
+            gap: 20px;
+        }
+
+        .header-titles h1 {
+            margin: 0;
+            font-size: 1.6em;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .header-titles p {
+            margin: 2px 0 0 0;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        /* NEU: Styles für die mittige Datumsanzeige */
+        .header-center-info {
+            text-align: center;
+            flex-grow: 1; /* Lässt es den verfügbaren Platz einnehmen, um mittig zu erscheinen */
+            font-size: 1em; /* Moderate Größe */
+            color: #333;
+            font-weight: 500;
+            line-height: 1.4;
+            white-space: nowrap; /* Verhindert Zeilenumbrüche */
+        }
+        .header-center-info .highlight {
+            font-weight: 600;
+            color: #000;
+        }
+        /* Media Query für kleine Bildschirme */
+        @media (max-width: 768px) {
+            .header-center-info {
+                order: 3; /* Im mobilen Layout ggf. nach unten verschieben */
+                width: 100%;
+                margin-top: 10px;
+                border-top: 1px solid rgba(0,0,0,0.1);
+                padding-top: 10px;
+            }
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-select-box {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .header-select-box label {
+            margin: 0;
+            font-size: 0.75em;
+            color: #444;
+            font-weight: 600;
+        }
+
+        .header-select-box select {
+            margin: 0;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            border-radius: 6px;
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-weight: 600;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-size: 0.85em;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .header-meta .highlight { font-weight: 600;
+            color: #000; }
+        .header-meta .author { font-size: 0.85em; color: #666; font-style: italic;
+            margin-top: 2px; }
+
+        .container {
+            width: 100%;
+            max-width: 1400px; 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 20px; 
+            padding: 0 20px; 
+            box-sizing: border-box;
+        }
+        
+        .calculator {
+            width: 22%;
+            min-width: 340px; 
+            padding: 25px; 
+            background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); 
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column; 
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .calculator:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .calc-content { flex-grow: 1;
+        }
+        .calculator h1 { text-align: center; color: #000; margin-top: 0; margin-bottom: 20px;
+            font-size: 1.3em; border-bottom: 2px solid #FFD600; padding-bottom: 10px; font-weight: 600;
+        }
+        
+        .info-details { 
+            font-size: 0.75em;
+            color: #444; 
+            margin-bottom: 15px; 
+            background: rgba(0, 0, 0, 0.05); 
+            padding: 10px; 
+            border-radius: 8px; 
+            border-left: 3px solid #FFD600; 
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        label { font-weight: 600; display: block; margin-bottom: 5px; font-size: 14px;
+            color: #000; }
+        
+        input, select { box-sizing: border-box;
+            width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); font-family: inherit; background: rgba(255,255,255,0.9); font-weight: 500; color: #000;
+        }
+        input:focus, select:focus { outline: none; border-color: #FFD600; background: #fff;
+        }
+        
+        .block-row { display: flex;
+            align-items: center; gap: 8px; margin-bottom: 10px; }
+        .block-row input { margin-bottom: 0;
+            padding: 8px; }
+        .block-row span { font-size: 12px; font-weight: bold; color: #333;
+        }
+        .btn-delete-block { background: rgba(224, 102, 102, 0.2); color: #cc0000; width: 35px;
+            padding: 8px; margin-bottom: 0; box-shadow: none; border: 1px solid rgba(224, 102, 102, 0.4); cursor: pointer;
+        }
+        .btn-delete-block:hover { background: #cc0000; color: white;
+        }
+        
+        .btn-add-block { background-color: #f1f3f5;
+            color: #333; border: 1px dashed #ccc; font-size: 13px; padding: 8px; margin-top: 5px; margin-bottom: 15px; box-shadow: none; width: 100%; cursor: pointer;
+        }
+        .btn-add-block:hover { background-color: #e2e6ea; transform: none;
+        }
+
+        button { box-sizing: border-box; width: 100%; padding: 10px; border-radius: 8px; font-family: inherit;
+            background-color: #FFD600; color: black; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; font-size: 16px; margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        button:hover { background-color: #f0c300; transform: scale(1.01);
+        }
+        
+        .btn-group { display: flex;
+            gap: 6px; }
+        .btn-main { flex-grow: 5;
+        }
+        .btn-reset { flex-grow: 1; background-color: rgba(224, 102, 102, 0.9); color: white;
+            font-size: 14px; padding: 10px 5px; margin-bottom: 10px; }
+        .btn-reset:hover { background-color: #cc0000;
+        }
+        .btn-undo { flex-grow: 1; background-color: rgba(111, 168, 220, 0.9); color: white;
+            font-size: 14px; padding: 10px 5px; margin-bottom: 10px; }
+        .btn-undo:hover { background-color: #3d85c6;
+        }
+
+        .result { text-align: center; padding: 15px; border-radius: 8px; min-height: 45px; font-size: 14px;
+            margin-top: auto; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); font-weight: 500; line-height: 1.4;
+        }
+        .neutral { color: #000; background-color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0,0,0,0.1); }
+        .negative { color: #800000;
+            background-color: rgba(255, 180, 180, 0.8); border: 1px solid rgba(255,0,0,0.2); }
+        .positive { color: #004d00;
+            background-color: rgba(180, 255, 180, 0.8); border: 1px solid rgba(0,255,0,0.2); }
+        
+        .warning-box { color: #533f03;
+            background-color: rgba(255, 243, 205, 0.9); border: 1px solid rgba(255, 214, 0, 0.5); padding: 8px; font-size: 0.85em; margin-top: 10px; border-radius: 6px;
+            font-weight: bold; line-height: 1.4; text-align: left; }
+        .transfer-box { margin-top: 10px; padding: 8px;
+            background: rgba(217, 235, 255, 0.9); border: 1px solid rgba(0, 123, 255, 0.3); border-radius: 6px; font-size: 12px; color: #004085; font-weight: bold;
+        }
+
+        .week-grid { display: grid; grid-template-columns: 1fr 3fr; gap: 15px; align-items: center;
+            margin-bottom: 25px; }
+        .week-grid label { margin: 0; color: #000; font-size: 16px;
+            font-weight: 600; }
+        .week-grid input { margin: 0; padding: 10px;
+        }
+        .input-warning { border: 2px solid #cc0000 !important;
+            background-color: rgba(255, 200, 200, 0.9) !important; }
+    </style>
+</head>
+<body>
+
+    <header class="custom-header">
+        <div class="header-titles">
+            <h1>Edeka Zeit-Assistent</h1>
+            <p>Dein digitaler Leitfaden für Arbeitszeit, Pausenregelungen und Wochenplanung</p>
+        </div>
+        <!-- NEU: Container für Datum, Wochentag und Kalenderwoche -->
+        <div class="header-center-info" id="current-date-info">
+            <!-- Hier werden die Informationen per JavaScript eingefügt -->
+        </div>
+        <div class="header-controls">
+            <div class="header-select-box">
+                <label>Altersgruppe:</label>
+                <select id="age-mode" tabindex="0" onchange="saveData(); triggerGlobalRecalculation();">
+                    <option value="adult">Erwachsen (ab 18 Jahre)</option>
+                    <option value="minor">Unter 18 Jahre</option>
+                </select>
+            </div>
+            <div class="header-meta">
+                <div>Standort <span class="highlight">Würzburg</span> | BV <span class="highlight">2026</span></div>
+                <div class="author">Made by Paul Ziese</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="calculator">
+            <div class="calc-content">
+                <h1>Arbeitszeit-Planer</h1>
+                <div class="info-details">Berechnet das voraussichtliche Ende basierend auf Gesetz, Alter und geplanten Pausen.</div>
+                
+                <label>Startzeit:</label>
+                <input type="text" id="start-time" tabindex="0" placeholder="z.B. 07:00 oder 7" onblur="formatTimeInput(this); saveStartData(this.value); calculateFeierabend();"
+                oninput="limitLength(this, 5)">
+                
+                <label>Tagessoll (Stunden):</label>
+                <select id="day-mode" tabindex="0" onchange="syncSollTime(); calculateFeierabend();">
+                    <option value="7.70">Standard-Vollzeit (7.70h)</option>
+                    <option value="4.00">Mindestarbeitszeit BV (4.00h)</option>
+                </select>
+                
+                <label>Geplante Gesamtpause (Minuten):</label>
+                <input type="number" id="planned-break" tabindex="0" value="30" min="0" max="360" step="5" oninput="limitLength(this, 3); calculateFeierabend()">
+            </div>
+            <div class="btn-group">
+                <button class="btn-reset" tabindex="0" onclick="resetFeierabend()" title="Zurücksetzen">✖</button>
+                <button class="btn-undo" tabindex="0" onclick="undoFeierabend()" title="Rückgängig">↩</button>
+                <button class="btn-main" tabindex="0" onclick="calculateFeierabend()">Frühestes Arbeitsende</button>
+            </div>
+            <div id="end-res" class="result neutral">---</div>
+        </div>
+
+        <div class="calculator">
+            <div class="calc-content">
+                <h1>Zeit-Bilanz</h1>
+                <div class="info-details">Trage deine Arbeitsintervalle ein. Pausen und Gesamtzeit werden automatisch ermittelt.</div>
+                
+                <label>Arbeitsblöcke (Intervalle):</label>
+                <div id="dynamic-blocks-container">
+                    <div class="block-row">
+                        <input type="text" class="b-start" tabindex="0" placeholder="07:00" onblur="formatTimeInput(this); saveStartData(this.value); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+                        <span>bis</span>
+                        <input type="text" class="b-end" tabindex="0" placeholder="12:00" onblur="formatTimeInput(this); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+                        <button class="btn-delete-block" tabindex="-1" onclick="removeBlock(this)">✖</button>
+                    </div>
+                </div>
+                <button class="btn-add-block" tabindex="0" onclick="addBlock()">Block hinzufügen</button>
+                
+                <label>Soll-Stunden heute:</label>
+                <input type="number" id="soll-input" tabindex="0" value="7.70" step="0.01" max="10" oninput="limitLength(this, 5); saveBilanzData(); calculateIntervalWork()">
+            </div>
+            <div class="btn-group">
+                <button class="btn-reset" tabindex="0" onclick="resetIstZeit()" title="Zurücksetzen">✖</button>
+                <button class="btn-undo" tabindex="0" onclick="undoIstZeit()" title="Rückgängig">↩</button>
+                <button class="btn-main" tabindex="0" onclick="saveIstBackup(); calculateIntervalWork();">Saldo berechnen</button>
+            </div>
+            <div id="int-res" class="result neutral">---</div>
+        </div>
+
+        <div class="calculator">
+            <div class="calc-content">
+                <h1>Wochen-Monitor</h1>
+                <div class="info-details">Trage deine Stunden für die Woche ein. Die Vorschau zeigt an, wie viel offen ist und teilt Reststunden auf.</div>
+                
+                <label>Wochenziel (Stunden):</label>
+                <input type="number" id="weekly-target-input" tabindex="0" value="38.50" step="0.01" min="0" max="168" onfocus="saveWocheBackup();" oninput="limitLength(this, 6); saveData(); distributePlaceholders();">
+
+                <div class="week-grid">
+                    <label>Mo:</label><input type="number" tabindex="0" step="0.01" max="24" class="week-day" id="w-mo" placeholder="7.70" onfocus="saveWocheBackup();" oninput="limitLength(this, 5); saveData(); distributePlaceholders();">
+                    <label>Di:</label><input type="number" tabindex="0" step="0.01" max="24" class="week-day" id="w-di" placeholder="7.70" onfocus="saveWocheBackup();" oninput="limitLength(this, 5); saveData(); distributePlaceholders();">
+                    <label>Mi:</label><input type="number" tabindex="0" step="0.01" max="24" class="week-day" id="w-mi" placeholder="7.70" onfocus="saveWocheBackup();" oninput="limitLength(this, 5); saveData(); distributePlaceholders();">
+                    <label>Do:</label><input type="number" tabindex="0" step="0.01" max="24" class="week-day" id="w-do" placeholder="7.70" onfocus="saveWocheBackup();" oninput="limitLength(this, 5); saveData(); distributePlaceholders();">
+                    <label>Fr:</label><input type="number" tabindex="0" step="0.01" max="24" class="week-day" id="w-fr" placeholder="7.70" onfocus="saveWocheBackup();" oninput="limitLength(this, 5); saveData(); distributePlaceholders();">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn-reset" tabindex="0" onclick="resetWoche()" title="Woche leeren">✖</button>
+                <button class="btn-undo" tabindex="0" onclick="undoWoche()" title="Rückgängig">↩</button>
+            </div>
+            <div id="week-res" class="result neutral">Eingetragen: 0.00h | Offen: 38.50h</div>
+        </div>
+
+        <div class="calculator">
+            <div class="calc-content">
+                <h1>Zeiteinheiten-Konverter</h1>
+                <div class="info-details">Konvertiert klassische Zeiteingaben unkompliziert in Dezimalwerte für den Wochen-Monitor.</div>
+                <label>h:mm ➔ Dezimal</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="number" id="conv-h" tabindex="0" placeholder="Std" max="999" oninput="limitLength(this, 3); clearDecField(); handleConversion();">
+                    <input type="number" id="conv-m" tabindex="0" placeholder="Min" max="59" oninput="limitLength(this, 2); clearDecField(); handleConversion();">
+                </div>
+                <label>Dezimal ➔ h:mm</label>
+                <input type="number" id="conv-dec" tabindex="0" step="0.01" max="999" placeholder="z.B. 7.70" oninput="limitLength(this, 5); clearHmFields(); handleConversion();">
+            </div>
+            <div class="btn-group">
+                <button class="btn-reset" tabindex="0" onclick="resetUmwandler()" title="Zurücksetzen">✖</button>
+                <button class="btn-undo" tabindex="0" onclick="undoUmwandler()" title="Rückgängig">↩</button>
+                <button class="btn-main" tabindex="0" onclick="handleConversion()">Umrechnen</button>
+            </div>
+            <div id="dec-res" class="result neutral">---</div>
+        </div>
+    </div>
+
+<script>
+    // --- OPTIMIERTE NAVIGATIONS-LOGIK ---
+    document.addEventListener('keydown', function(e) {
+        if (['Enter', 'ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(e.key)) {
+            const active = document.activeElement;
+            if (!active || active.tagName === 'BODY') return;
+
+            const parentCalc = active.closest('.calculator') || active.closest('.custom-header');
+            if (!parentCalc) return;
+
+            const allFocusable = Array.from(parentCalc.querySelectorAll('input, select, button'));
+            const focusable = allFocusable.filter(el =>
+                el.tabIndex !== -1 && 
+                el.offsetParent !== null && 
+                !el.classList.contains('btn-delete-block')
+            );
+            const currentIndex = focusable.indexOf(active);
+            if (currentIndex === -1) return;
+
+            if (e.key === 'Enter') {
+                if (active.tagName === 'INPUT' || active.tagName === 'SELECT') {
+                    if (currentIndex < focusable.length - 1) {
+                        e.preventDefault();
+                        focusable[currentIndex + 1].focus();
+                    }
+                }
+            } 
+            else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                let next = (currentIndex + 1) % focusable.length;
+                focusable[next].focus();
+            } 
+            else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                let prev = (currentIndex - 1 + focusable.length) % focusable.length;
+                focusable[prev].focus();
+            }
+        }
+    });
+
+    let backupFeierabend = null;
+    let backupIstZeit = null;
+    let backupWoche = null;
+    let backupUmwandler = null;
+
+    function limitLength(input, maxLength) {
+        if (input.value.length > maxLength) {
+            input.value = input.value.slice(0, maxLength);
+        }
+    }
+
+    function formatTimeInput(input) {
+        let val = input.value.trim().replace('.', ':').replace(',', ':');
+        if (!val) return;
+
+        if (/^\d+$/.test(val)) {
+            if (val.length <= 2) {
+                let h = parseInt(val, 10);
+                if (h >= 0 && h <= 23) val = String(h).padStart(2, '0') + ':00';
+            } else if (val.length === 3) {
+                let h = parseInt(val.substring(0, 1), 10);
+                let m = parseInt(val.substring(1), 10);
+                if (m <= 59) val = '0' + h + ':' + String(m).padStart(2, '0');
+            } else if (val.length === 4) {
+                let h = parseInt(val.substring(0, 2), 10);
+                let m = parseInt(val.substring(2), 10);
+                if (h <= 23 && m <= 59) val = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+            }
+        } else if (val.includes(':')) {
+            let parts = val.split(':');
+            let h = parseInt(parts[0], 10);
+            let m = parseInt(parts[1] || 0, 10);
+            if (!isNaN(h) && !isNaN(m) && h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+                val = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+            } else {
+                val = '';
+            }
+        } else {
+            val = '';
+        }
+        input.value = val;
+    }
+
+    const tToMin = (t) => { 
+        if(!t || t === "" || !t.includes(':')) return null;
+        const parts = t.split(':');
+        const h = Number(parts[0]);
+        const m = Number(parts[1]);
+        if(isNaN(h) || isNaN(m) || h > 23 || m > 59) return null;
+        return Math.round(h * 60 + m); 
+    };
+
+    function getWeekNumber(d) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+        var startOfYear = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+        return d.getUTCFullYear() + "-" + Math.ceil(( ( (d - startOfYear) / 86400000) + 1)/7);
+    }
+
+    // NEU: Funktion zum Anzeigen von Tag, Datum und KW
+    function displayCurrentDateInfo() {
+        const dateInfoDiv = document.getElementById('current-date-info');
+        if (!dateInfoDiv) return;
+
+        const now = new Date();
+        const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = now.toLocaleDateString('de-DE', optionsDate); // z.B. "Mittwoch, 10. Juni 2026"
+
+        const weekNum = getWeekNumber(now).split('-')[1]; // Extrahiert die KW-Nummer
+        const displayKW = `KW ${weekNum}`;
+
+        dateInfoDiv.innerHTML = `<span class="highlight">${formattedDate}</span> | <span class="highlight">${displayKW}</span>`;
+    }
+
+    function checkWeeklyReset() {
+        const currentWeek = getWeekNumber(new Date());
+        const savedWeek = localStorage.getItem('edeka_saved_week');
+        if (savedWeek && savedWeek !== currentWeek) {
+            localStorage.removeItem('edeka_mo');
+            localStorage.removeItem('edeka_di');
+            localStorage.removeItem('edeka_mi'); 
+            localStorage.removeItem('edeka_do');
+            localStorage.removeItem('edeka_fr');
+        }
+        localStorage.setItem('edeka_saved_week', currentWeek);
+    }
+
+    function checkDailyReset() {
+        const todayStr = new Date().toDateString();
+        const savedDay = localStorage.getItem('edeka_saved_day');
+        if (savedDay && savedDay !== todayStr) {
+            localStorage.removeItem('edeka_bilanz_blocks');
+            localStorage.removeItem('edeka_bilanz_soll');
+        }
+        localStorage.setItem('edeka_saved_day', todayStr);
+    }
+
+    function saveBilanzData() {
+        const starts = Array.from(document.querySelectorAll('.b-start')).map(i => i.value);
+        const ends = Array.from(document.querySelectorAll('.b-end')).map(i => i.value);
+        const blocks = starts.map((s, idx) => ({ start: s, end: ends[idx] }));
+        localStorage.setItem('edeka_bilanz_blocks', JSON.stringify(blocks));
+        localStorage.setItem('edeka_bilanz_soll', document.getElementById('soll-input').value);
+    }
+
+    function loadBilanzData() {
+        const rawBlocks = localStorage.getItem('edeka_bilanz_blocks');
+        const savedSoll = localStorage.getItem('edeka_bilanz_soll');
+        
+        if (savedSoll) {
+            document.getElementById('soll-input').value = savedSoll;
+        }
+
+        if (rawBlocks) {
+            const blocks = JSON.parse(rawBlocks);
+            if (blocks.length > 0) {
+                const container = document.getElementById('dynamic-blocks-container');
+                container.innerHTML = "";
+                blocks.forEach((block, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'block-row';
+                    div.innerHTML = `
+                        <input type="text" class="b-start" tabindex="0" value="${block.start}" placeholder="07:00" onblur="formatTimeInput(this); saveStartData(this.value); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+                        <span>bis</span>
+                        <input type="text" class="b-end" tabindex="0" value="${block.end}" placeholder="12:00" onblur="formatTimeInput(this); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+                        <button class="btn-delete-block" tabindex="-1" onclick="removeBlock(this)">✖</button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        }
+        calculateIntervalWork();
+    }
+
+    function saveData() {
+        localStorage.setItem('edeka_age', document.getElementById('age-mode').value);
+        localStorage.setItem('edeka_weekly_target', document.getElementById('weekly-target-input').value);
+        localStorage.setItem('edeka_mo', document.getElementById('w-mo').value);
+        localStorage.setItem('edeka_di', document.getElementById('w-di').value);
+        localStorage.setItem('edeka_mi', document.getElementById('w-mi').value);
+        localStorage.setItem('edeka_do', document.getElementById('w-do').value);
+        localStorage.setItem('edeka_fr', document.getElementById('w-fr').value);
+    }
+
+    function loadWeekData() {
+        const savedTarget = localStorage.getItem('edeka_weekly_target');
+        if (savedTarget) {
+            document.getElementById('weekly-target-input').value = savedTarget;
+        }
+
+        const days = ['mo', 'di', 'mi', 'do', 'fr'];
+        days.forEach(day => {
+            const val = localStorage.getItem('edeka_' + day);
+            if (val) {
+                document.getElementById('w-' + day).value = val;
+            }
+        });
+        distributePlaceholders();
+    }
+
+    function loadAgeData() {
+        const savedAge = localStorage.getItem('edeka_age');
+        if (savedAge) {
+            document.getElementById('age-mode').value = savedAge;
+        }
+    }
+
+    function saveStartData(val) {
+        const data = { value: val, timestamp: Date.now() };
+        localStorage.setItem('edeka_start_time', JSON.stringify(data));
+        
+        const startInput = document.getElementById('start-time');
+        const firstBStart = document.querySelector('.b-start');
+        if (startInput && startInput.value !== val) startInput.value = val;
+        if (firstBStart && firstBStart.value !== val) firstBStart.value = val;
+        triggerGlobalRecalculation();
+    }
+
+    function loadStartData() {
+        const raw = localStorage.getItem('edeka_start_time');
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (Date.now() - data.timestamp < 12 * 60 * 60 * 1000) {
+            const startInput = document.getElementById('start-time');
+            const firstBStart = document.querySelector('.b-start');
+            if (startInput) startInput.value = data.value;
+            if (firstBStart) firstBStart.value = data.value;
+            triggerGlobalRecalculation();
+        } else {
+            localStorage.removeItem('edeka_start_time');
+        }
+    }
+
+    function triggerGlobalRecalculation() {
+        calculateFeierabend();
+        calculateIntervalWork();
+    }
+
+    function syncSollTime() {
+        const selectedSoll = document.getElementById('day-mode').value;
+        document.getElementById('soll-input').value = selectedSoll;
+        saveBilanzData();
+        calculateIntervalWork();
+    }
+
+    function clearDecField() { document.getElementById('conv-dec').value = "";
+    }
+    function clearHmFields() { document.getElementById('conv-h').value = ""; document.getElementById('conv-m').value = "";
+    }
+
+    function addBlock() {
+        saveIstBackup();
+        const container = document.getElementById('dynamic-blocks-container');
+        const div = document.createElement('div');
+        div.className = 'block-row';
+        div.innerHTML = `
+            <input type="text" class="b-start" tabindex="0" placeholder="07:00" onblur="formatTimeInput(this); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+            <span>bis</span>
+            <input type="text" class="b-end" tabindex="0" placeholder="12:00" onblur="formatTimeInput(this); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+            <button class="btn-delete-block" tabindex="-1" onclick="removeBlock(this)">✖</button>
+        `;
+        container.appendChild(div);
+        saveBilanzData();
+    }
+
+    function removeBlock(btn) {
+        saveIstBackup();
+        const container = document.getElementById('dynamic-blocks-container');
+        if(container.children.length > 1) {
+            btn.parentElement.remove();
+            saveBilanzData();
+            calculateIntervalWork();
+        } else {
+            btn.parentElement.querySelectorAll('input').forEach(i => i.value = "");
+            saveBilanzData();
+            calculateIntervalWork();
+        }
+    }
+
+    function resetFeierabend() {
+        backupFeierabend = {
+            start: document.getElementById('start-time').value,
+            mode: document.getElementById('day-mode').value,
+            break: document.getElementById('planned-break').value,
+            html: document.getElementById('end-res').innerHTML,
+            className: document.getElementById('end-res').className
+        };
+        document.getElementById('start-time').value = "";
+        const firstBStart = document.querySelector('.b-start');
+        if (firstBStart) firstBStart.value = "";
+        document.getElementById('day-mode').selectedIndex = 0;
+        document.getElementById('planned-break').value = "30";
+        document.getElementById('end-res').className = 'result neutral';
+        document.getElementById('end-res').innerHTML = '---';
+        localStorage.removeItem('edeka_start_time');
+        saveBilanzData();
+        triggerGlobalRecalculation();
+    }
+    
+    function undoFeierabend() {
+        if (!backupFeierabend) return;
+        document.getElementById('start-time').value = backupFeierabend.start;
+        document.getElementById('day-mode').value = backupFeierabend.mode;
+        document.getElementById('planned-break').value = backupFeierabend.break;
+        document.getElementById('end-res').innerHTML = backupFeierabend.html;
+        document.getElementById('end-res').className = backupFeierabend.className;
+        saveStartData(backupFeierabend.start);
+    }
+
+    function saveIstBackup() {
+        const starts = Array.from(document.querySelectorAll('.b-start')).map(i => i.value);
+        const ends = Array.from(document.querySelectorAll('.b-end')).map(i => i.value);
+        backupIstZeit = {
+            blocks: starts.map((s, idx) => ({ start: s, end: ends[idx] })),
+            soll: document.getElementById('soll-input').value,
+            html: document.getElementById('int-res').innerHTML,
+            className: document.getElementById('int-res').className
+        };
+    }
+
+    function resetIstZeit() {
+        saveIstBackup();
+        const container = document.getElementById('dynamic-blocks-container');
+        container.innerHTML = `
+            <div class="block-row">
+                <input type="text" class="b-start" tabindex="0" placeholder="07:00" onblur="formatTimeInput(this); saveStartData(this.value); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+                <span>bis</span>
+                <input type="text" class="b-end" tabindex="0" placeholder="12:00" onblur="formatTimeInput(this); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+                <button class="btn-delete-block" tabindex="-1" onclick="removeBlock(this)">✖</button>
+            </div>
+        `;
+        document.getElementById('soll-input').value = "7.70";
+        document.getElementById('int-res').className = 'result neutral';
+        document.getElementById('int-res').innerHTML = '---';
+        localStorage.removeItem('edeka_bilanz_blocks');
+        localStorage.removeItem('edeka_bilanz_soll');
+    }
+
+    function undoIstZeit() {
+        if (!backupIstZeit) return;
+        const container = document.getElementById('dynamic-blocks-container');
+        container.innerHTML = "";
+        
+        backupIstZeit.blocks.forEach((block, idx) => {
+            const div = document.createElement('div');
+            div.className = 'block-row';
+            div.innerHTML = `
+                <input type="text" class="b-start" tabindex="0" value="${block.start}" onblur="formatTimeInput(this); ${idx === 0 ? 'saveStartData(this.value);' : ''} saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+                <span>bis</span>
+                <input type="text" class="b-end" tabindex="0" value="${block.end}" onblur="formatTimeInput(this); saveBilanzData(); calculateIntervalWork()" oninput="limitLength(this, 5)">
+                <button class="btn-delete-block" tabindex="-1" onclick="removeBlock(this)">✖</button>
+            `;
+            container.appendChild(div);
+        });
+        document.getElementById('soll-input').value = backupIstZeit.soll;
+        document.getElementById('int-res').innerHTML = backupIstZeit.html;
+        document.getElementById('int-res').className = backupIstZeit.className;
+        saveBilanzData();
+    }
+
+    function saveWocheBackup() {
+        backupWoche = {
+            target: document.getElementById('weekly-target-input').value,
+            mo: document.getElementById('w-mo').value,
+            di: document.getElementById('w-di').value,
+            mi: document.getElementById('w-mi').value,
+            do: document.getElementById('w-do').value,
+            fr: document.getElementById('w-fr').value,
+            html: document.getElementById('week-res').innerHTML,
+            className: document.getElementById('week-res').className
+        };
+    }
+
+    function distributePlaceholders() {
+        const target = parseFloat(document.getElementById('weekly-target-input').value) || 38.5;
+        const dayIds = ['w-mo', 'w-di', 'w-mi', 'w-do', 'w-fr'];
+        let currentSum = 0;
+        let emptyInputs = [];
+        dayIds.forEach(id => {
+            const el = document.getElementById(id);
+            const val = parseFloat(el.value);
+            if (!isNaN(val)) {
+                currentSum += val;
+            } else {
+                emptyInputs.push(el);
+            }
+        });
+        if (emptyInputs.length > 0) {
+            const remainingHours = Math.max(0, target - currentSum);
+            const distributionValue = (remainingHours / emptyInputs.length).toFixed(2);
+
+            emptyInputs.forEach(el => {
+                el.placeholder = distributionValue;
+            });
+        }
+
+        calculateWeek();
+    }
+
+    function resetWoche() {
+        saveWocheBackup();
+        ['mo', 'di', 'mi', 'do', 'fr'].forEach(day => {
+            const field = document.getElementById('w-' + day);
+            field.value = "";
+            field.placeholder = "7.70";
+            field.classList.remove('input-warning');
+        });
+        document.getElementById('weekly-target-input').value = "38.50";
+        saveData(); 
+        distributePlaceholders(); 
+    }
+
+    function undoWoche() {
+        if (!backupWoche) return;
+        document.getElementById('weekly-target-input').value = backupWoche.target;
+        document.getElementById('w-mo').value = backupWoche.mo;
+        document.getElementById('w-di').value = backupWoche.di;
+        document.getElementById('w-mi').value = backupWoche.mi;
+        document.getElementById('w-do').value = backupWoche.do;
+        document.getElementById('w-fr').value = backupWoche.fr;
+        document.getElementById('week-res').innerHTML = backupWoche.html;
+        document.getElementById('week-res').className = backupWoche.className;
+        saveData();
+        distributePlaceholders();
+    }
+
+    function resetUmwandler() {
+        backupUmwandler = {
+            h: document.getElementById('conv-h').value,
+            m: document.getElementById('conv-m').value,
+            dec: document.getElementById('conv-dec').value,
+            html: document.getElementById('dec-res').innerHTML
+        };
+        document.getElementById('conv-h').value = "";
+        document.getElementById('conv-m').value = "";
+        document.getElementById('conv-dec').value = "";
+        document.getElementById('dec-res').className = 'result neutral';
+        document.getElementById('dec-res').innerHTML = '---';
+    }
+    
+    function undoUmwandler() {
+        if (!backupUmwandler) return;
+        document.getElementById('conv-h').value = backupUmwandler.h;
+        document.getElementById('conv-m').value = backupUmwandler.m;
+        document.getElementById('conv-dec').value = backupUmwandler.dec;
+        document.getElementById('dec-res').innerHTML = backupUmwandler.html;
+    }
+
+    function calculateFeierabend() {
+        const start = document.getElementById('start-time').value.trim();
+        const soll = parseFloat(document.getElementById('day-mode').value);
+        const ageMode = document.getElementById('age-mode').value;
+        let userBreak = parseInt(document.getElementById('planned-break').value || 0);
+        if (start === "") {
+            document.getElementById('end-res').className = 'result neutral';
+            document.getElementById('end-res').innerHTML = '---';
+            return;
+        }
+        
+        let mins = tToMin(start);
+        if(mins === null || isNaN(soll)) {
+            document.getElementById('end-res').innerHTML = 'Ungültige Eingabe!';
+            document.getElementById('end-res').className = 'result negative';
+            return;
+        }
+        
+        let workMins = Math.round(soll * 60);
+        let gesetzPause = 0;
+        if (ageMode === 'minor') {
+            if (soll > 6.0) gesetzPause = 60;
+            else if (soll > 4.5) gesetzPause = 30;
+        } else {
+            if (soll > 9.0) gesetzPause = 45;
+            else if (soll > 6.0) gesetzPause = 30;
+        }
+        
+        let warnMsg = "";
+        if (userBreak < gesetzPause) {
+            if (ageMode === 'minor') {
+                warnMsg = `<div class="warning-box" style="margin-top:10px;">Achtung: Jugendliche benötigen ab 6h Arbeit gesetzlich mindestens 60 Min. Pause!</div>`;
+            } else {
+                warnMsg = `<div class="warning-box" style="margin-top:10px;">Achtung: Gesetzliche Mindestpause (${gesetzPause} Min.) unterschritten!</div>`;
+            }
+        }
+        
+        let total = mins + workMins + userBreak;
+        let endH = Math.floor(total / 60) % 24;
+        let endM = Math.round(total % 60);
+        
+        document.getElementById('end-res').className = 'result neutral';
+        document.getElementById('end-res').innerHTML = `Voraussichtliches Ende:<br><b style="font-size:1.3em;">${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')} Uhr</b>${warnMsg}`;
+    }
+
+    function calculateIntervalWork() {
+        const starts = document.querySelectorAll('.b-start');
+        const ends = document.querySelectorAll('.b-end');
+        const soll = parseFloat(document.getElementById('soll-input').value);
+        const ageMode = document.getElementById('age-mode').value;
+
+        let activeIntervals = [];
+        let inputError = false;
+        for(let i=0; i<starts.length; i++) {
+            if(starts[i].value === "" && ends[i].value === "") continue;
+            let sVal = tToMin(starts[i].value);
+            let eVal = tToMin(ends[i].value);
+            
+            if(sVal === null || eVal === null) {
+                if(starts[i].value !== "" || ends[i].value !== "") inputError = true;
+                continue;
+            }
+            if(eVal < sVal) eVal += 1440;
+            activeIntervals.push({start: sVal, end: eVal});
+        }
+
+        if(inputError || isNaN(soll) || soll > 24) {
+            document.getElementById('int-res').innerHTML = 'Ungültige Eingabe!';
+            document.getElementById('int-res').className = 'result negative';
+            return;
+        }
+
+        if(activeIntervals.length === 0) {
+            document.getElementById('int-res').innerHTML = '---';
+            document.getElementById('int-res').className = 'result neutral';
+            return;
+        }
+
+        activeIntervals.sort((a,b) => a.start - b.start);
+        let totalBruttoMin = activeIntervals[activeIntervals.length - 1].end - activeIntervals[0].start;
+        let totalNettoMin = 0;
+        activeIntervals.forEach(block => totalNettoMin += (block.end - block.start));
+        let actualBreakMin = totalBruttoMin - totalNettoMin;
+        if(actualBreakMin < 0) actualBreakMin = 0;
+        let totalNettoH = Math.round(totalNettoMin / 60 * 100) / 100;
+        if (totalNettoH > 10) {
+            document.getElementById('int-res').innerHTML = `Netto: ${totalNettoH}h (Achtung: Gesetzliches Limit von 10h überschritten!)`;
+            document.getElementById('int-res').className = 'result negative';
+            return;
+        }
+
+        let reqBreakMin = 0;
+        if (ageMode === 'minor') {
+            if (totalNettoH > 6.0) reqBreakMin = 60;
+            else if (totalNettoH > 4.5) reqBreakMin = 30;
+        } else {
+            if (totalNettoH > 9.0) reqBreakMin = 45;
+            else if (totalNettoH > 6.0) reqBreakMin = 30;
+        }
+
+        let breakWarnMsg = "";
+        if (actualBreakMin < reqBreakMin) {
+            if (ageMode === 'minor') {
+                breakWarnMsg = `<div class="warning-box">Achtung: Jugendliche benötigen ab 6h Nettozeit min. 60 Min. Pause (erfasst: ${actualBreakMin} Min.)!</div>`;
+            } else {
+                breakWarnMsg = `<div class="warning-box">Achtung: Gesetzliche Mindestpause unterschritten! Erforderlich: ${reqBreakMin} Min. (erfasst: ${actualBreakMin} Min.)</div>`;
+            }
+        }
+
+        let diff = Math.round((totalNettoH - soll) * 100) / 100;
+        let display = `Netto: ${totalNettoH}h | Differenz: ${diff > 0 ? '+' : ''}${diff}h${breakWarnMsg}`;
+        document.getElementById('int-res').innerHTML = display;
+        document.getElementById('int-res').className = diff >= 0 ? 'result positive' : 'result negative';
+    }
+
+    function calculateWeek() {
+        let total = 0;
+        ['mo', 'di', 'mi', 'do', 'fr'].forEach(d => {
+            const val = parseFloat(document.getElementById('w-' + d).value);
+            if (!isNaN(val)) total += val;
+        });
+        const target = parseFloat(document.getElementById('weekly-target-input').value) || 38.5;
+        let diff = Math.round((total - target) * 100) / 100;
+        
+        let resField = document.getElementById('week-res');
+        if (total >= target) {
+            resField.className = 'result positive';
+            resField.innerHTML = `Eingetragen: ${total.toFixed(2)}h | Differenz: +${diff.toFixed(2)}h`;
+        } else {
+            resField.className = 'result negative';
+            resField.innerHTML = `Eingetragen: ${total.toFixed(2)}h | Offen: ${Math.abs(diff).toFixed(2)}h (-${Math.abs(diff).toFixed(2)}h)`;
+        }
+    }
+
+    function handleConversion() {
+        const h = document.getElementById('conv-h').value;
+        const m = document.getElementById('conv-m').value;
+        const dec = document.getElementById('conv-dec').value;
+        const res = document.getElementById('dec-res');
+        if (h !== "" || m !== "") {
+            let total = parseInt(h || 0) + (parseInt(m || 0) / 60);
+            res.innerHTML = `Dezimalwert: ${total.toFixed(2)}`;
+        } else if (dec !== "") {
+            let totalMins = Math.round(parseFloat(dec) * 60);
+            let h = Math.floor(totalMins / 60);
+            let m = totalMins % 60;
+            res.innerHTML = `Zeit: ${h}:${String(m).padStart(2,'0')}`;
+        } else {
+            res.innerHTML = '---';
+        }
+    }
+    
+    // Initialisierung
+    checkWeeklyReset();
+    checkDailyReset();
+    loadWeekData();
+    loadAgeData();
+    loadStartData();
+    loadBilanzData();
+    displayCurrentDateInfo(); // NEU: Funktion beim Laden aufrufen
+</script>
+</body>
+</html>
