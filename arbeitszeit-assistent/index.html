@@ -54,24 +54,23 @@
             color: #555;
         }
 
-        /* NEU: Styles für die mittige Datumsanzeige */
         .header-center-info {
             text-align: center;
-            flex-grow: 1; /* Lässt es den verfügbaren Platz einnehmen, um mittig zu erscheinen */
-            font-size: 1em; /* Moderate Größe */
+            flex-grow: 1; 
+            font-size: 1em; 
             color: #333;
             font-weight: 500;
             line-height: 1.4;
-            white-space: nowrap; /* Verhindert Zeilenumbrüche */
+            white-space: nowrap; 
         }
         .header-center-info .highlight {
             font-weight: 600;
             color: #000;
         }
-        /* Media Query für kleine Bildschirme */
+        
         @media (max-width: 768px) {
             .header-center-info {
-                order: 3; /* Im mobilen Layout ggf. nach unten verschieben */
+                order: 3; 
                 width: 100%;
                 margin-top: 10px;
                 border-top: 1px solid rgba(0,0,0,0.1);
@@ -198,6 +197,68 @@
         .btn-add-block:hover { background-color: #e2e6ea; transform: none;
         }
 
+        .btn-export-csv {
+            background-color: #2e7d32;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background-color 0.2s;
+        }
+        .btn-export-csv:hover {
+            background-color: #1b5e20;
+        }
+        .export-container {
+            position: relative;
+            display: inline-block;
+        }
+        .export-tooltip {
+            visibility: hidden;
+            width: 250px;
+            background-color: #1a1a1a;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 10px 12px;
+            position: absolute;
+            z-index: 100;
+            top: 125%;
+            right: 0;
+            opacity: 0;
+            transition: opacity 0.2s, visibility 0.2s;
+            font-size: 0.75em;
+            line-height: 1.4;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+        .export-tooltip::after {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            right: 20px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent #1a1a1a transparent;
+        }
+        .export-container:hover .export-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .warn-text-subtle {
+            color: #ffd600;
+            margin-top: 6px;
+            font-size: 0.9em;
+            display: block;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 5px;
+        }
+
         button { box-sizing: border-box; width: 100%; padding: 10px; border-radius: 8px; font-family: inherit;
             background-color: #FFD600; color: black; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; font-size: 16px; margin-bottom: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
@@ -251,9 +312,9 @@
             <h1>Edeka Zeit-Assistent</h1>
             <p>Dein digitaler Leitfaden für Arbeitszeit, Pausenregelungen und Wochenplanung</p>
         </div>
-        <!-- NEU: Container für Datum, Wochentag und Kalenderwoche -->
+        
         <div class="header-center-info" id="current-date-info">
-            <!-- Hier werden die Informationen per JavaScript eingefügt -->
+            
         </div>
         <div class="header-controls">
             <div class="header-select-box">
@@ -297,22 +358,36 @@
             <div id="end-res" class="result neutral">---</div>
         </div>
 
-        <div class="calculator">
-            <div class="calc-content">
-                <h1>Daten-Export</h1>
-                <div class="info-details">Alle erfassten Tageszeiten werden im Hintergrund gespeichert. Lade hier deine komplette Arbeitszeittabelle als CSV für Excel herunter.</div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <svg style="width: 50px; height: 50px; color: #4CAF50; margin-bottom: 10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        <div class="header-controls">
+            <div class="header-select-box">
+                <label>Altersgruppe:</label>
+                <select id="age-mode" tabindex="0" onchange="saveData(); triggerGlobalRecalculation();">
+                    <option value="adult">Erwachsen (ab 18 Jahre)</option>
+                    <option value="minor">Unter 18 Jahre</option>
+                </select>
+            </div>
+
+            <div class="export-container">
+                <button class="btn-export-csv" onclick="exportCSV()">
+                    <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
                     </svg>
+                    CSV Export
+                </button>
+                <div class="export-tooltip">
+                    <strong>Arbeitszeiten-Export</strong><br>
+                    Lädt die bisherige Historie aller Tage inkl. aller Einzelblöcke als CSV herunter.
+                    <span class="warn-text-subtle">
+                        ⚠️ <b>Hinweis:</b> Speicherung erfolgt lokal im Browser. Beim Löschen der Browserdaten geht die Historie verloren!
+                    </span>
                 </div>
             </div>
-            <div class="btn-group">
-                <button class="btn-reset" tabindex="0" onclick="clearHistory()" title="Historie löschen">✖ Historie leeren</button>
-                <button class="btn-main" style="background-color: #4CAF50; color: white;" tabindex="0" onclick="exportCSV()">CSV Herunterladen</button>
+
+            <div class="header-meta">
+                <div>Standort <span class="highlight">Würzburg</span> | BV <span class="highlight">2026</span></div>
+                <div class="author">Made by Paul Ziese</div>
             </div>
-            <div id="export-res" class="result neutral">Tabelle umfasst alle gespeicherten Tage.</div>
         </div>
 
         <div class="calculator">
@@ -387,7 +462,6 @@
     </div>
 
 <script>
-    // --- OPTIMIERTE NAVIGATIONS-LOGIK ---
     document.addEventListener('keydown', function(e) {
         if (['Enter', 'ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(e.key)) {
             const active = document.activeElement;
@@ -485,16 +559,15 @@
         return d.getUTCFullYear() + "-" + Math.ceil(( ( (d - startOfYear) / 86400000) + 1)/7);
     }
 
-    // NEU: Funktion zum Anzeigen von Tag, Datum und KW
     function displayCurrentDateInfo() {
         const dateInfoDiv = document.getElementById('current-date-info');
         if (!dateInfoDiv) return;
 
         const now = new Date();
         const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        const formattedDate = now.toLocaleDateString('de-DE', optionsDate); // z.B. "Mittwoch, 10. Juni 2026"
+        const formattedDate = now.toLocaleDateString('de-DE', optionsDate); 
 
-        const weekNum = getWeekNumber(now).split('-')[1]; // Extrahiert die KW-Nummer
+        const weekNum = getWeekNumber(now).split('-')[1]; 
         const displayKW = `KW ${weekNum}`;
 
         dateInfoDiv.innerHTML = `<span class="highlight">${formattedDate}</span> | <span class="highlight">${displayKW}</span>`;
@@ -888,7 +961,6 @@
         let activeIntervals = [];
         let inputError = false;
         
-        // Speichere die originalen String-Werte für den Export
         let rawBlocks = []; 
 
         for(let i=0; i<starts.length; i++) {
@@ -954,7 +1026,6 @@
         document.getElementById('int-res').innerHTML = display;
         document.getElementById('int-res').className = diff >= 0 ? 'result positive' : 'result negative';
 
-        // --- NEU: In der Historie speichern ---
         saveToHistory(rawBlocks, soll, totalNettoH, diff, actualBreakMin);
     }
 
@@ -995,18 +1066,15 @@
         }
     }
     
-    // --- HISTORIE & CSV EXPORT LOGIK ---
     
     function saveToHistory(blocks, soll, netto, diff, pauseMin) {
-        // Generiert das aktuelle Datum im Format YYYY-MM-DD
+        
         const todayStr = new Date().toISOString().split('T')[0];
         
         let history = JSON.parse(localStorage.getItem('edeka_time_history') || '[]');
         
-        // Entfernt einen eventuell schon existierenden Eintrag für heute, um ihn zu überschreiben (aktualisieren)
         history = history.filter(entry => entry.date !== todayStr);
         
-        // Fügt den aktuellen Stand hinzu
         history.push({ 
             date: todayStr, 
             blocks: blocks, 
@@ -1016,7 +1084,6 @@
             pause: pauseMin
         });
         
-        // Sortiert chronologisch zur Sicherheit
         history.sort((a, b) => new Date(a.date) - new Date(b.date));
         
         localStorage.setItem('edeka_time_history', JSON.stringify(history));
@@ -1026,51 +1093,41 @@
         let history = JSON.parse(localStorage.getItem('edeka_time_history') || '[]');
         
         if (history.length === 0) {
-            document.getElementById('export-res').innerHTML = 'Keine Daten zum Exportieren gefunden.';
-            document.getElementById('export-res').className = 'result negative';
+            alert('Keine gespeicherten Arbeitszeiten für den Export vorhanden!');
             return;
         }
 
-        // CSV Header (Die Spaltenbeschriftungen)
-        let csvContent = "Datum;Wochentag;Arbeitsbeginn;Arbeitsende;Pause (Min);Netto-Stunden;Soll-Stunden;Differenz\n";
+        let csvContent = "Datum;Wochentag;Arbeitsbeginn;Arbeitsende;Alle Blöcke;Pause (Min);Netto-Stunden;Soll-Stunden;Differenz\n";
 
         history.forEach(row => {
             let dateObj = new Date(row.date);
             let dateStr = dateObj.toLocaleDateString('de-DE');
             let weekday = dateObj.toLocaleDateString('de-DE', { weekday: 'long' });
             
-            // Greife den ersten Start und das letzte Ende ab (wie in üblichen Stundenzetteln)
             let startStr = row.blocks.length > 0 ? row.blocks[0].start : "";
             let endStr = row.blocks.length > 0 ? row.blocks[row.blocks.length - 1].end : "";
+            
+            let blocksFormatted = row.blocks.map(b => `${b.start}-${b.end}`).join(" | ");
 
-            // Formatierung der Zeile (durch Semikolon getrennt, damit Excel es sofort als Spalten erkennt)
-            csvContent += `${dateStr};${weekday};${startStr};${endStr};${row.pause};${row.netto};${row.soll};${row.diff}\n`;
+            let nettoStr = String(row.netto).replace('.', ',');
+            let sollStr = String(row.soll).replace('.', ',');
+            let diffStr = String(row.diff).replace('.', ',');
+
+            csvContent += `${dateStr};${weekday};${startStr};${endStr};"${blocksFormatted}";${row.pause};${nettoStr};${sollStr};${diffStr}\n`;
         });
 
-        // Blob erstellen für den Download (inklusive UTF-8 BOM, damit Excel Umlaute checkt)
         let blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
         let link = document.createElement("a");
         let url = URL.createObjectURL(blob);
         
-        // Dateiname mit heutigem Datum
         let filenameDate = new Date().toISOString().split('T')[0];
         link.setAttribute("href", url);
         link.setAttribute("download", `Arbeitszeiten_${filenameDate}.csv`);
         
-        // Temporär ins Dokument einfügen, klicken und wieder entfernen
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        document.getElementById('export-res').innerHTML = 'Export erfolgreich heruntergeladen!';
-        document.getElementById('export-res').className = 'result positive';
-        
-        // Setze die Nachricht nach 3 Sekunden zurück
-        setTimeout(() => {
-            document.getElementById('export-res').innerHTML = 'Tabelle umfasst alle gespeicherten Tage.';
-            document.getElementById('export-res').className = 'result neutral';
-        }, 3000);
     }
 
     function clearHistory() {
@@ -1081,14 +1138,13 @@
         }
     }
 
-    // Initialisierung
     checkWeeklyReset();
     checkDailyReset();
     loadWeekData();
     loadAgeData();
     loadStartData();
     loadBilanzData();
-    displayCurrentDateInfo(); // NEU: Funktion beim Laden aufrufen
+    displayCurrentDateInfo();
 </script>
 </body>
 </html>
