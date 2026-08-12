@@ -118,7 +118,12 @@
 
         .header-meta .highlight { font-weight: 600; color: #000; }
         .header-meta .author { font-size: 0.85em; color: #666; font-style: italic; margin-top: 2px; }
-        
+
+        .export-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
         .btn-export-csv {
             background-color: #2e7d32;
             color: #fff;
@@ -147,8 +152,8 @@
             backdrop-filter: blur(6px); 
             -webkit-backdrop-filter: blur(6px);
             color: #fff;
-        text-align: left;
-        border-radius: 8px;
+            text-align: left;
+            border-radius: 8px;
             padding: 10px 14px;
             position: absolute;
             z-index: 2000;
