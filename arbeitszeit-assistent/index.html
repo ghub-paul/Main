@@ -118,13 +118,7 @@
 
         .header-meta .highlight { font-weight: 600; color: #000; }
         .header-meta .author { font-size: 0.85em; color: #666; font-style: italic; margin-top: 2px; }
-
-        /* Runder, kompakter CSV-Button & sauberes Tooltip */
-        .export-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
+        
         .btn-export-csv {
             background-color: #2e7d32;
             color: #fff;
@@ -167,6 +161,11 @@
             line-height: 1.35;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
             pointer-events: none;
+        }
+
+        .export-container:hover .export-tooltip {
+            visibility: visible;
+            opacity: 1;
         }
 
         .export-tooltip strong {
