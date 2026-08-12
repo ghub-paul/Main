@@ -299,6 +299,24 @@
 
         <div class="calculator">
             <div class="calc-content">
+                <h1>Daten-Export</h1>
+                <div class="info-details">Alle erfassten Tageszeiten werden im Hintergrund gespeichert. Lade hier deine komplette Arbeitszeittabelle als CSV für Excel herunter.</div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <svg style="width: 50px; height: 50px; color: #4CAF50; margin-bottom: 10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn-reset" tabindex="0" onclick="clearHistory()" title="Historie löschen">✖ Historie leeren</button>
+                <button class="btn-main" style="background-color: #4CAF50; color: white;" tabindex="0" onclick="exportCSV()">CSV Herunterladen</button>
+            </div>
+            <div id="export-res" class="result neutral">Tabelle umfasst alle gespeicherten Tage.</div>
+        </div>
+
+        <div class="calculator">
+            <div class="calc-content">
                 <h1>Zeit-Bilanz</h1>
                 <div class="info-details">Trage deine Arbeitsintervalle ein. Pausen und Gesamtzeit werden automatisch ermittelt.</div>
                 
@@ -869,6 +887,10 @@
 
         let activeIntervals = [];
         let inputError = false;
+        
+        // Speichere die originalen String-Werte für den Export
+        let rawBlocks = []; 
+
         for(let i=0; i<starts.length; i++) {
             if(starts[i].value === "" && ends[i].value === "") continue;
             let sVal = tToMin(starts[i].value);
@@ -880,6 +902,7 @@
             }
             if(eVal < sVal) eVal += 1440;
             activeIntervals.push({start: sVal, end: eVal});
+            rawBlocks.push({start: starts[i].value, end: ends[i].value});
         }
 
         if(inputError || isNaN(soll) || soll > 24) {
@@ -901,6 +924,7 @@
         let actualBreakMin = totalBruttoMin - totalNettoMin;
         if(actualBreakMin < 0) actualBreakMin = 0;
         let totalNettoH = Math.round(totalNettoMin / 60 * 100) / 100;
+        
         if (totalNettoH > 10) {
             document.getElementById('int-res').innerHTML = `Netto: ${totalNettoH}h (Achtung: Gesetzliches Limit von 10h überschritten!)`;
             document.getElementById('int-res').className = 'result negative';
@@ -919,7 +943,7 @@
         let breakWarnMsg = "";
         if (actualBreakMin < reqBreakMin) {
             if (ageMode === 'minor') {
-                breakWarnMsg = `<div class="warning-box">Achtung: Jugendliche benötigen ab 6h Nettozeit min. 60 Min. Pause (erfasst: ${actualBreakMin} Min.)!</div>`;
+                breakWarnMsg = `<div class="warning-box">Achtung: Jugendliche ab 6h Nettozeit min. 60 Min. Pause (erfasst: ${actualBreakMin} Min.)!</div>`;
             } else {
                 breakWarnMsg = `<div class="warning-box">Achtung: Gesetzliche Mindestpause unterschritten! Erforderlich: ${reqBreakMin} Min. (erfasst: ${actualBreakMin} Min.)</div>`;
             }
@@ -929,6 +953,9 @@
         let display = `Netto: ${totalNettoH}h | Differenz: ${diff > 0 ? '+' : ''}${diff}h${breakWarnMsg}`;
         document.getElementById('int-res').innerHTML = display;
         document.getElementById('int-res').className = diff >= 0 ? 'result positive' : 'result negative';
+
+        // --- NEU: In der Historie speichern ---
+        saveToHistory(rawBlocks, soll, totalNettoH, diff, actualBreakMin);
     }
 
     function calculateWeek() {
@@ -968,6 +995,92 @@
         }
     }
     
+    // --- HISTORIE & CSV EXPORT LOGIK ---
+    
+    function saveToHistory(blocks, soll, netto, diff, pauseMin) {
+        // Generiert das aktuelle Datum im Format YYYY-MM-DD
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        let history = JSON.parse(localStorage.getItem('edeka_time_history') || '[]');
+        
+        // Entfernt einen eventuell schon existierenden Eintrag für heute, um ihn zu überschreiben (aktualisieren)
+        history = history.filter(entry => entry.date !== todayStr);
+        
+        // Fügt den aktuellen Stand hinzu
+        history.push({ 
+            date: todayStr, 
+            blocks: blocks, 
+            soll: soll, 
+            netto: netto, 
+            diff: diff,
+            pause: pauseMin
+        });
+        
+        // Sortiert chronologisch zur Sicherheit
+        history.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        localStorage.setItem('edeka_time_history', JSON.stringify(history));
+    }
+
+    function exportCSV() {
+        let history = JSON.parse(localStorage.getItem('edeka_time_history') || '[]');
+        
+        if (history.length === 0) {
+            document.getElementById('export-res').innerHTML = 'Keine Daten zum Exportieren gefunden.';
+            document.getElementById('export-res').className = 'result negative';
+            return;
+        }
+
+        // CSV Header (Die Spaltenbeschriftungen)
+        let csvContent = "Datum;Wochentag;Arbeitsbeginn;Arbeitsende;Pause (Min);Netto-Stunden;Soll-Stunden;Differenz\n";
+
+        history.forEach(row => {
+            let dateObj = new Date(row.date);
+            let dateStr = dateObj.toLocaleDateString('de-DE');
+            let weekday = dateObj.toLocaleDateString('de-DE', { weekday: 'long' });
+            
+            // Greife den ersten Start und das letzte Ende ab (wie in üblichen Stundenzetteln)
+            let startStr = row.blocks.length > 0 ? row.blocks[0].start : "";
+            let endStr = row.blocks.length > 0 ? row.blocks[row.blocks.length - 1].end : "";
+
+            // Formatierung der Zeile (durch Semikolon getrennt, damit Excel es sofort als Spalten erkennt)
+            csvContent += `${dateStr};${weekday};${startStr};${endStr};${row.pause};${row.netto};${row.soll};${row.diff}\n`;
+        });
+
+        // Blob erstellen für den Download (inklusive UTF-8 BOM, damit Excel Umlaute checkt)
+        let blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        let url = URL.createObjectURL(blob);
+        
+        // Dateiname mit heutigem Datum
+        let filenameDate = new Date().toISOString().split('T')[0];
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Arbeitszeiten_${filenameDate}.csv`);
+        
+        // Temporär ins Dokument einfügen, klicken und wieder entfernen
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        document.getElementById('export-res').innerHTML = 'Export erfolgreich heruntergeladen!';
+        document.getElementById('export-res').className = 'result positive';
+        
+        // Setze die Nachricht nach 3 Sekunden zurück
+        setTimeout(() => {
+            document.getElementById('export-res').innerHTML = 'Tabelle umfasst alle gespeicherten Tage.';
+            document.getElementById('export-res').className = 'result neutral';
+        }, 3000);
+    }
+
+    function clearHistory() {
+        if(confirm("Bist du sicher, dass du die gesamte Arbeitszeit-Historie löschen möchtest? Dies kann nicht rückgängig gemacht werden.")) {
+            localStorage.removeItem('edeka_time_history');
+            document.getElementById('export-res').innerHTML = 'Historie wurde gelöscht.';
+            document.getElementById('export-res').className = 'result neutral';
+        }
+    }
+
     // Initialisierung
     checkWeeklyReset();
     checkDailyReset();
